@@ -10,8 +10,9 @@ class NamedNode extends Term {
   /**
    * @constructor
    * @param iri {String}
+   * @param ln {String|undefined} The term, if applicable
    */
-  constructor (iri) {
+  constructor (iri, ln = undefined) {
     super()
     this.termType = NamedNode.termType
 
@@ -32,7 +33,13 @@ class NamedNode extends Term {
       throw new Error(message)
     }
 
+    const existing = Term.nsMap[iri]
+    if (existing) {
+      return existing
+    }
+
     this.value = iri
+    Term.addNN(this, ln)
   }
   /**
    * Returns an $rdf node for the containing directory, ending in slash.
