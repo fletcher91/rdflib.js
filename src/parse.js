@@ -6,6 +6,7 @@ const N3Parser = require('./n3parser')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
 const RDFParser = require('./rdfxmlparser')
 const sparqlUpdateParser = require('./patch-parser')
+const NQuadsParser = require('./n-quads-parser')
 const Term = require('./term')
 const Util = require('./util')
 
@@ -23,6 +24,12 @@ function parse (str, kb, base, contentType, callback) {
       var p = N3Parser(kb, kb, base, base, null, null, '', null)
       p.loadBuf(str)
       executeCallback()
+    } else if (contentType === 'application/nquads'
+      || contentType === 'application/n-quads'
+      || contentType === 'application/n-triples') {
+      const nqParser = new NQuadsParser(kb)
+      nqParser.loadBuf(str)
+      executeCallback()
     } else if (contentType === 'application/rdf+xml') {
       var parser = new RDFParser(kb)
       parser.parse(Util.parseXML(str), base, kb.sym(base))
@@ -36,9 +43,7 @@ function parse (str, kb, base, contentType, callback) {
     } else if (contentType === 'application/sparql-update') { // @@ we handle a subset
       sparqlUpdateParser(str, kb, base)
       executeCallback()
-    } else if (contentType === 'application/ld+json' ||
-               contentType === 'application/nquads' ||
-               contentType === 'application/n-quads') {
+    } else if (contentType === 'application/ld+json') {
       var n3Parser = N3.Parser()
       var triples = []
       if (contentType === 'application/ld+json') {
