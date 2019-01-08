@@ -15,6 +15,7 @@ module.exports.domToString = domToString
 module.exports.dumpNode = dumpNode
 module.exports.heavyCompare = heavyCompare
 module.exports.heavyCompareSPO = heavyCompareSPO
+module.exports.lookup = lookup
 module.exports.output = output
 module.exports.parseXML = parseXML
 module.exports.RDFArrayRemove = rdfArrayRemove
@@ -309,6 +310,17 @@ function heavyCompareSPO (x, y, g, uriMap) {
     heavyCompare(x.object, y.object, g, uriMap)
 }
 
+function lookup(s, p, o, g, map) {
+  const sMap = map[s.sI]
+  const pMap = sMap && sMap[p]
+  const oMap = pMap && pMap[o]
+  if (oMap) {
+    return oMap[g.sI]
+  }
+
+  return undefined;
+}
+
 /**
  * Defines a simple debugging function
  * @method output
@@ -351,17 +363,12 @@ function parseXML (str, options) {
  * Exports as `RDFArrayRemove`
  */
 function rdfArrayRemove (a, x) {
-  for (var i = 0; i < a.length; i++) {
-    // TODO: This used to be the following, which didnt always work..why
-    // if(a[i] === x)
-    if (a[i].subject.sameTerm(x.subject) &&
-      a[i].predicate.sameTerm(x.predicate) &&
-      a[i].object.sameTerm(x.object) &&
-      a[i].why.sameTerm(x.why)) {
-      a.splice(i, 1)
-      return
-    }
+  const index = a.indexOf(x)
+  if (index >= 0) {
+    a.splice(index, 1)
+    return
   }
+
   throw new Error('RDFArrayRemove: Array did not contain ' + x + ' ' + x.why)
 }
 

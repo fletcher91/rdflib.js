@@ -1,7 +1,17 @@
 'use strict'
 const Node = require('./node')
+const { lookup } = require('./util')
 
 class Statement {
+  static from(s, p, o, g) {
+    const existing = lookup(s, p, o, g, Statement.stMap)
+    if (existing) {
+      return existing
+    }
+
+    return new Statement(s, p, o, g)
+  }
+
   /* Construct a new statment
   **
   ** @param {Term} subject - The subject of the triple.  What the efact is about
@@ -23,6 +33,10 @@ class Statement {
     this.predicate = Node.fromValue(predicate)
     this.object = Node.fromValue(object)
     this.why = graph  // property currently used by rdflib
+    const existing = lookup(this.subject, this.predicate, this.object, this.why, Statement.stMap)
+    if (existing) {
+      return existing
+    }
   }
   get graph () {
     return this.why
@@ -62,5 +76,7 @@ class Statement {
     return this.toNT()
   }
 }
+
+Statement.stMap = []
 
 module.exports = Statement
