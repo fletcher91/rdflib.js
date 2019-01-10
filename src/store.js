@@ -97,6 +97,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       'InverseFunctionalProperty',
       'FunctionalProperty'
     ]
+    this.defaultGraphIRI = this.sym(defaultGraphURI)
     this.initPropertyActions(this.features)
   }
 
@@ -242,6 +243,61 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
   }
 
   /**
+   * Adds a statement to the store
+   * @param st {Statement} The statement to add
+   * @return {this}
+   */
+  addStatement (st) {
+    if (!st.why) {
+      // system generated
+      st.why = this.fetcher ? this.fetcher.appNode : this.defaultGraphIRI
+    }
+
+    if (this.predicateCallback) {
+      this.predicateCallback(this, st.predicate, st.why)
+    }
+
+    // Action return true if the statement does not need to be added
+    const predHash = this.canon(st.predicate).hashString()
+    const actions = this.propertyActions[predHash] // Predicate hash
+    var done = false
+    if (actions) {
+      // alert('type: '+typeof actions +' @@ actions='+actions)
+      for (i = 0; i < actions.length; i++) {
+        done = done || actions[i](this, st.subject, st.predicate, st.object, st.why)
+      }
+    }
+
+    // Takes time but saves duplicates
+    if (this.holds(st)) {
+      return this
+    }
+    // If we are tracking provenance, every thing should be loaded into the store
+    // if (done) return new Statement(subj, pred, obj, why)
+    // Don't put it in the store
+    // still return this statement for owl:sameAs input
+    const hash = [
+      this.canon(st.subject).hashString(),
+      predHash,
+      this.canon(st.object).hashString(),
+      this.canon(st.why).hashString()
+    ]
+    let i, ix, h
+    for (let i = 0; i < 4; i++) {
+      ix = this.index[i]
+      h = hash[i]
+      if (!ix[h]) {
+        ix[h] = []
+      }
+      ix[h].push(st) // Set of things with this as subject, etc
+    }
+
+    this.statements.push(st)
+
+    return this
+  }
+
+  /**
    * Adds a triple (quad) to the store.
    *
    * @param {Term} subject - The thing about which the fact a relationship is asserted
@@ -252,64 +308,21 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
    */
   add (subj, pred, obj, why) {
     var i
-    if (arguments.length === 1) {
-      if (subj instanceof Array) {
+    if (typeof pred === "undefined") {
+      if (Array.isArray(subj)) {
         for (i = 0; i < subj.length; i++) {
           this.add(subj[i])
         }
       } else if (subj instanceof Statement) {
-        this.add(subj.subject, subj.predicate, subj.object, subj.why)
+        this.addStatement(subj)
       } else if (subj instanceof IndexedFormula) {
         this.add(subj.statements)
       }
-      return this
-    }
-    var actions
-    var st
-    if (!why) {
-      // system generated
-      why = this.fetcher ? this.fetcher.appNode : this.sym(defaultGraphURI)
-    }
-    subj = Node.fromValue(subj)
-    pred = Node.fromValue(pred)
-    obj = Node.fromValue(obj)
-    why = Node.fromValue(why)
-    if (this.predicateCallback) {
-      this.predicateCallback(this, pred, why)
-    }
-    // Action return true if the statement does not need to be added
-    var predHash = this.canon(pred).hashString()
-    actions = this.propertyActions[predHash] // Predicate hash
-    var done = false
-    if (actions) {
-      // alert('type: '+typeof actions +' @@ actions='+actions)
-      for (i = 0; i < actions.length; i++) {
-        done = done || actions[i](this, subj, pred, obj, why)
-      }
-    }
-    if (this.holds(subj, pred, obj, why)) { // Takes time but saves duplicates
-      // console.log('rdflib: Ignoring dup! {' + subj + ' ' + pred + ' ' + obj + ' ' + why + '}')
-      return null // @@better to return self in all cases?
-    }
-    // If we are tracking provenance, every thing should be loaded into the store
-    // if (done) return new Statement(subj, pred, obj, why)
-    // Don't put it in the store
-    // still return this statement for owl:sameAs input
-    var hash = [ this.canon(subj).hashString(), predHash,
-      this.canon(obj).hashString(), this.canon(why).hashString()]
-    st = new Statement(subj, pred, obj, why)
-    for (i = 0; i < 4; i++) {
-      var ix = this.index[i]
-      var h = hash[i]
-      if (!ix[h]) {
-        ix[h] = []
-      }
-      ix[h].push(st) // Set of things with this as subject, etc
+    } else {
+      this.addStatement(Statement.from(subj, pred, obj, why))
     }
 
-    // log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why)
-    this.statements.push(st)
-    return st
+    return this
   }
 
   /**

@@ -32,7 +32,7 @@ class Statement {
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)
     this.object = Node.fromValue(object)
-    this.why = graph  // property currently used by rdflib
+    this.why = Node.fromValue(graph) // property currently used by rdflib
     const existing = lookup(this.subject, this.predicate, this.object, this.why, Statement.stMap)
     if (existing) {
       return existing

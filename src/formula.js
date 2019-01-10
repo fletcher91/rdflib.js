@@ -48,9 +48,9 @@ class Formula extends Node {
   }
 
   addAll (statements) {
-    statements.forEach(quad => {
-      this.add(quad.subject, quad.predicate, quad.object, quad.graph)
-    })
+    for (let i = 0, len = statements.length; i < len; i++) {
+      this.addStatement(statements[i])
+    }
   }
 
   /** Follow link from one node, using one wildcard, looking for one
@@ -85,11 +85,7 @@ class Formula extends Node {
   }
 
   anyStatementMatching (subj, pred, obj, why) {
-    var x = this.statementsMatching(subj, pred, obj, why, true)
-    if (!x || x.length === 0) {
-      return undefined
-    }
-    return x[0]
+    return this.statements.find(this.wildcardCompare(subj, pred, obj, why))
   }
 
   /** Search the Store
@@ -104,13 +100,7 @@ class Formula extends Node {
    * @returns {Array<Node>} - An array of nodes which match the wildcard position
    */
   statementsMatching (subj, pred, obj, why, justOne) {
-    let found = this.statements.filter(st =>
-      (!subj || subj.sameTerm(st.subject)) &&
-      (!pred || pred.sameTerm(st.predicate)) &&
-      (!obj || subj.sameTerm(st.object)) &&
-      (!why || why.sameTerm(st.subject))
-     )
-    return found
+    return this.statements.filter(this.wildcardCompare(subj, pred, obj, why))
   }
   /**
    * Finds the types in the list which have no *stored* subtypes
@@ -460,7 +450,7 @@ class Formula extends Node {
         }
         return true
       } else if (s instanceof Statement) {
-        return this.holds(s.subject, s.predicate, s.object, s.why)
+        return this.statements.indexOf(s) >= 0
       } else if (s.statements) {
         return this.holds(s.statements)
       }
@@ -480,7 +470,7 @@ class Formula extends Node {
     return collection
   }
   literal (val, lang, dt) {
-    return Term.literalByValue('' + val, lang, dt)
+    return Term.literalByValue(val, lang, dt)
   }
   /**
    * transform a collection of NTriple URIs into their URI strings
@@ -633,6 +623,14 @@ class Formula extends Node {
   }
   whether (s, p, o, g) {
     return this.statementsMatching(s, p, o, g, false).length
+  }
+
+  wildcardCompare(subj, pred, obj,  why) {
+    return st =>
+      (!subj || subj === st.subject) &&
+      (!pred || pred === st.predicate) &&
+      (!obj || subj === st.object) &&
+      (!why || why === st.why);
   }
 }
 Formula.termType = 'Graph'
