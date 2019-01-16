@@ -2,11 +2,12 @@ module.exports = parse
 
 const jsonld = require('jsonld')
 const N3 = require('n3')  // @@ Goal: remove this dependency
+const NQuadsParser = require('n-quads-parser')
+
 const N3Parser = require('./n3parser')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
 const RDFParser = require('./rdfxmlparser')
 const sparqlUpdateParser = require('./patch-parser')
-const NQuadsParser = require('./n-quads-parser')
 const Term = require('./term')
 const Util = require('./util')
 
