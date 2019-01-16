@@ -34,7 +34,7 @@
   "dependencies": {
     "async": "^0.9.x",
     "jsonld": "^0.4.5",
-    "n-quads-parser": "^1.0.0",
+    "n-quads-parser": ">=1.2.0",
     "n3": "^0.4.1",
     "solid-auth-client": "^2.2.3",
     "xmldom": "^0.1.22"
@@ -93,9 +93,11 @@
   "files": [
     "src",
     "lib",
-    "dist"
+    "dist",
+    "index.d.ts"
   ],
   "main": "lib/index.js",
+  "types": "index.d.ts",
   "keywords": [
     "linkeddata",
     "linked data",
