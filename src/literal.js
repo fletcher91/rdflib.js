@@ -25,6 +25,22 @@ class Literal extends Term {
   copy () {
     return Literal.find(this.value, this.lang, this.datatype)
   }
+  [Symbol.toPrimitive](_) {
+    if ([undefined, XSD.string, XSD.langString].includes(this.datatype)) {
+      return this.value
+    }
+    if (this.datatype === XSD.boolean) {
+      return this.value === 'true' || this.value === '1'
+    }
+    if ([XSD.date, XSD.dateTime, XSD.dateTimeStamp].includes(this.datatype)) {
+      return new Date(this.value)
+    }
+    if ([XSD.decimal, XSD.double, XSD.integer, XSD.int, XSD.float, XSD.long].includes(this.datatype)) {
+      return Number(this.value)
+    }
+
+    return undefined
+  }
   get language () {
     return this.lang
   }
