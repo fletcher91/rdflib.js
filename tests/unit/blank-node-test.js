@@ -5,7 +5,6 @@ import fs from 'fs'
 import rdf from '../../src/index'
 
 import BlankNode from '../../src/blank-node'
-import Term from '../../src/term'
 
 describe('BlankNode', () => {
   after(() => {
@@ -22,7 +21,7 @@ describe('BlankNode', () => {
     })
 
     it('should return an existing instance if present', () => {
-      const existing = Term.blankNodeByID('http://example.com/2#subresource')
+      const existing = BlankNode.find('http://example.com/2#subresource')
       expect(new BlankNode('http://example.com/2#subresource').sI).to.equal(existing.sI)
     })
   })

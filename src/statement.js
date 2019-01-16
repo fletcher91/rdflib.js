@@ -1,6 +1,6 @@
 'use strict'
 const Node = require('./node')
-const { lookup } = require('./util')
+const { lookup, writeToMap } = require('./util')
 
 class Statement {
   static from(s, p, o, g) {
@@ -29,14 +29,22 @@ class Statement {
   ** powerful update() which can update more than one docment.
   */
   constructor (subject, predicate, object, graph) {
-    this.subject = Node.fromValue(subject)
-    this.predicate = Node.fromValue(predicate)
-    this.object = Node.fromValue(object)
-    this.why = Node.fromValue(graph) // property currently used by rdflib
+    this.subject = (subject && subject.hasOwnProperty('termType')) ? subject : Node.fromValue(subject)
+    this.predicate = (predicate && predicate.hasOwnProperty('termType')) ? predicate : Node.fromValue(predicate)
+    this.object = (object && object.hasOwnProperty('termType')) ? object : Node.fromValue(object)
+    this.why = (graph && graph.hasOwnProperty('termType')) ? graph : Node.fromValue(graph) // property currently used by rdflib
     const existing = lookup(this.subject, this.predicate, this.object, this.why, Statement.stMap)
     if (existing) {
       return existing
     }
+    writeToMap(
+      this.subject.sI,
+      this.predicate.sI,
+      this.object.sI,
+      this.why ? this.why.sI : undefined,
+      this,
+      Statement.stMap
+    )
   }
   get graph () {
     return this.why

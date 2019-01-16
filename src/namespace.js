@@ -1,12 +1,12 @@
-const Term = require('./term');
+const NamedNode = require('./named-node')
 
 function Namespace (nsuri) {
-  Term.namedNodeByIRI(nsuri)
+  NamedNode.find(nsuri)
 
   return function (ln) {
     const fullIRI = nsuri + (ln || '')
 
-    return Term.namedNodeByIRI(fullIRI, ln)
+    return NamedNode.find(fullIRI, ln)
   }
 }
 

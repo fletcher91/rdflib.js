@@ -860,7 +860,7 @@ class RDFaProcessor {
     if (typeof x === 'string') {
       if (x.substring(0, 2) === '_:') {
         if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
-          this.blankNodes[x.substring(2)] = Node.blankNodeByID(x.substring(2))
+          this.blankNodes[x.substring(2)] = rdf.blankNode(x.substring(2))
         }
         return this.blankNodes[x.substring(2)]
       }
@@ -870,22 +870,22 @@ class RDFaProcessor {
       case RDFaProcessor.objectURI:
         if (x.value.substring(0, 2) === '_:') {
           if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
-            this.blankNodes[x.value.substring(2)] = Node.blankNodeByID(x.value.substring(2))
+            this.blankNodes[x.value.substring(2)] = rdf.blankNode(x.value.substring(2))
           }
           return this.blankNodes[x.value.substring(2)]
         }
         return rdf.namedNode(x.value)
       case RDFaProcessor.PlainLiteralURI:
-        return Node.literalByValue(x.value, x.language || '')
+        return rdf.literal(x.value, x.language || '')
       case RDFaProcessor.XMLLiteralURI:
       case RDFaProcessor.HTMLLiteralURI:
         var string = ''
         Object.keys(x.value).forEach(function (i) {
           string += Util.domToString(x.value[i], this.htmlOptions)
         })
-        return Node.literalByValue(string, null, Node.namedNodeByIRI(x.type))
+        return rdf.literal(string, null, rdf.namedNode(x.type))
       default:
-        return Node.literalByValue(x.value, null, Node.namedNodeByIRI(x.type))
+        return rdf.literal(x.value, null, rdf.namedNode(x.type))
     }
   }
 

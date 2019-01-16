@@ -5,7 +5,8 @@
 ** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
 ** Licence: MIT
 */
-const Term = require('./term')
+const BlankNode = require('./blank-node')
+const NamedNode = require('./named-node')
 const Uri = require('./uri')
 const Util = require('./util')
 const XSD = require('./xsd')
@@ -215,7 +216,7 @@ var Serializer = (function () {
       var list = x.elements
       var rest = kb.sym(rdfns + 'nill')
       for (var i = list.length - 1; i >= 0; i--) {
-        var bnode = Term.blankNodeByID()
+        var bnode = BlankNode.find()
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
         rest = bnode
@@ -803,7 +804,7 @@ var Serializer = (function () {
           if (number === intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = Term.namedNodeByIRI('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
+            pred = NamedNode.find('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
           }
         }
 

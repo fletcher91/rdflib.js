@@ -1,7 +1,6 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
 
-import Term from '../../src/term';
 import Literal from '../../src/literal'
 import XSD from '../../src/xsd'
 
@@ -12,7 +11,7 @@ describe('Literal', () => {
     })
 
     it('should return an existing instance if present', () => {
-      const existing = Term.literalByValue('Some neat text')
+      const existing = Literal.find('Some neat text')
       expect(new Literal('Some neat text').sI).to.equal(existing.sI)
     })
   })

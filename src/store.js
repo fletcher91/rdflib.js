@@ -270,7 +270,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
 
     // Takes time but saves duplicates
     if (this.holds(st)) {
-      return this
+      return null // @@better to return self in all cases?
     }
     // If we are tracking provenance, every thing should be loaded into the store
     // if (done) return new Statement(subj, pred, obj, why)
@@ -294,23 +294,22 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
 
     this.statements.push(st)
 
-    return this
+    return st
   }
 
   /**
    * Adds a triple (quad) to the store.
    *
-   * @param {Term} subject - The thing about which the fact a relationship is asserted
-   * @param {namedNode} predicate - The relationship which is asserted
-   * @param {Term} object - The object of the relationship, e.g. another thing or avalue
+   * @param {Term} subj - The thing about which the fact a relationship is asserted
+   * @param {namedNode} pred - The relationship which is asserted
+   * @param {Term} obj - The object of the relationship, e.g. another thing or avalue
    * @param {namedNode} why - The document in which the triple (S,P,O) was or will be stored on the web
    * @returns {Statement} The statement added to the store
    */
   add (subj, pred, obj, why) {
-    var i
     if (typeof pred === "undefined") {
       if (Array.isArray(subj)) {
-        for (i = 0; i < subj.length; i++) {
+        for (let i = 0; i < subj.length; i++) {
           this.add(subj[i])
         }
       } else if (subj instanceof Statement) {
@@ -318,11 +317,14 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       } else if (subj instanceof IndexedFormula) {
         this.add(subj.statements)
       }
-    } else {
-      this.addStatement(Statement.from(subj, pred, obj, why))
+
+      return this
     }
 
-    return this
+    const st = Statement.from(subj, pred, obj, why)
+    this.addStatement(st)
+
+    return st
   }
 
   /**
@@ -557,8 +559,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     if (st instanceof IndexedFormula) {
       return this.remove(st.statements)
     }
-    var sts = this.statementsMatching(st.subject, st.predicate, st.object,
-      st.why)
+    var sts = this.statementsMatching(st.subject, st.predicate, st.object, st.why, true)
     if (!sts.length) {
       throw new Error('Statement to be removed is not on store: ' + st)
     }

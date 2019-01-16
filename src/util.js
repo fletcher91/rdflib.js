@@ -25,6 +25,7 @@ module.exports.string = {}
 module.exports.string.template = stringTemplate
 module.exports.uri = require('./uri')  // TODO: Remove this mixed usage
 module.exports.log = log
+module.exports.writeToMap = writeToMap
 
 module.exports.mediaTypeClass = function(mediaType){
   mediaType = mediaType.split(';')[0].trim()  // remove media type parameters
@@ -319,6 +320,19 @@ function lookup(s, p, o, g, map) {
   }
 
   return undefined;
+}
+
+function writeToMap(s, p, o, g, v, map) {
+  if (typeof map[s] === "undefined") {
+    map[s] = [];
+  }
+  if (typeof map[s][p] === "undefined") {
+    map[s][p] = [];
+  }
+  if (typeof map[s][p][o] === "undefined") {
+    map[s][p][o] = [];
+  }
+  map[s][p][o][g] = v;
 }
 
 /**

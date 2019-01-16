@@ -1,14 +1,16 @@
 'use strict'
+const BlankNode = require('./blank-node')
 const Collection = require('./collection')
 const DefaultGraph = require('./default-graph')
 const Fetcher = require('./fetcher')
 const IndexedFormula = require('./store')
+const Literal = require('./literal')
+const NamedNode = require('./named-node')
 const Statement = require('./statement')
-const Term = require('./term')
 const Variable = require('./variable')
 
 function blankNode (value) {
-  return Term.blankNodeByID(value)
+  return BlankNode.find(value)
 }
 function collection (elements) {
   return new Collection(elements)
@@ -23,21 +25,21 @@ function graph () {
   return new IndexedFormula()
 }
 function lit (val, lang, dt) {
-  return Term.literalByValue('' + val, lang, dt)
+  return Literal.find('' + val, lang, dt)
 }
 function literal (value, languageOrDatatype) {
   if (typeof languageOrDatatype === 'string') {
     if (languageOrDatatype.indexOf(':') === -1) {
-      return Term.literalByValue(value, languageOrDatatype)
+      return Literal.find(value, languageOrDatatype)
     } else {
-      return Term.literalByValue(value, null, namedNode(languageOrDatatype))
+      return Literal.find(value, null, namedNode(languageOrDatatype))
     }
   } else {
-    return Term.literalByValue(value, null, languageOrDatatype)
+    return Literal.find(value, null, languageOrDatatype)
   }
 }
 function namedNode (value) {
-  return Term.namedNodeByIRI(value)
+  return NamedNode.find(value)
 }
 function quad (subject, predicate, object, graph) {
   graph = graph || new DefaultGraph()

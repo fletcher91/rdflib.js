@@ -14,16 +14,16 @@ class Literal extends Term {
       datatype = XSD.langString
     }
     // If not specified, a literal has the implied XSD.string default datatype
-    this.datatype = datatype ? NamedNode.fromValue(datatype) : XSD.string
+    this.datatype = datatype ? NamedNode.find(datatype) : XSD.string
 
-    const existing = Term.findLiteralByValue(value, language, datatype)
+    const existing = Literal.findLiteralByValue(value, language, datatype)
     if (existing) {
       return existing
     }
-    Term.addLit(this)
+    Literal.mem(this)
   }
   copy () {
-    return Term.literalByValue(this.value, this.lang, this.datatype)
+    return Literal.find(this.value, this.lang, this.datatype)
   }
   get language () {
     return this.lang
@@ -52,6 +52,74 @@ class Literal extends Term {
     }
     return str
   }
+
+  /**
+   * Assigns an index number and adds a Literal instance to the indices
+   * @private
+   * @param lit The Literal instance to register
+   * @return {Literal} The updated Literal instance
+   */
+  static mem(lit) {
+    if (lit.sI) {
+      throw new Error(`Literal ${lit} already registered`)
+    }
+
+    lit.sI = ++Term.termIndex
+    const dtIndex = (lit.datatype || require('./xsd').string).sI
+    if (!Term.litMap[dtIndex]) {
+      Term.litMap[dtIndex] = []
+    }
+    if (lit.language) {
+      if (!Term.litMap[dtIndex][lit.value]) {
+        Term.litMap[dtIndex][lit.value] = []
+      }
+      Term.termMap[lit.sI] = Term.litMap[dtIndex][lit.value][lit.language] = lit
+    } else {
+      Term.termMap[lit.sI] = Term.litMap[dtIndex][lit.value] = lit
+    }
+
+    return lit
+  }
+
+  /** @private */
+  static findLiteralByValue(strValue, lang = undefined, datatype) {
+    let fromMap
+    // Language strings need an additional index layer
+    if (lang) {
+      const langStringIndex = require('./xsd').langString.sI
+      if (!Term.litMap[langStringIndex]) {
+        Term.litMap[langStringIndex] = []
+      }
+      if (!Term.litMap[langStringIndex][strValue]) {
+        Term.litMap[langStringIndex][strValue] = []
+      }
+      fromMap = Term.litMap[langStringIndex][strValue][lang]
+    } else {
+      const dtIndex = (datatype || require('./xsd').string).sI
+      fromMap = Term.litMap[dtIndex] && Term.litMap[dtIndex][strValue]
+    }
+
+    return fromMap
+  }
+
+  /**
+   * Retrieve or create a Literal by its datatype, value, and language
+   * @param value {Object} The value of the literal
+   * @param lang? {string} The language of the literal (will force datatype xsd:langString)
+   * @param datatype? {NamedNode} The IRI of the datatype
+   * @return {Literal} The resolved or created Literal
+   */
+  static find(value, lang = undefined, datatype) {
+    const strValue = value.toString()
+
+    const existing = Literal.findLiteralByValue(strValue, lang, datatype)
+    if (existing) {
+      return existing
+    }
+
+    return new Literal(strValue, lang, datatype)
+  }
+
   /**
    * @method fromBoolean
    * @static
@@ -60,7 +128,7 @@ class Literal extends Term {
    */
   static fromBoolean (value) {
     let strValue = value ? '1' : '0'
-    return Term.literalByValue(strValue, null, XSD.boolean)
+    return Literal.find(strValue, null, XSD.boolean)
   }
   /**
    * @method fromDate
@@ -78,7 +146,7 @@ class Literal extends Term {
     let date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) +
       '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' +
       d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z'
-    return Term.literalByValue(date, null, XSD.dateTime)
+    return Literal.find(date, null, XSD.dateTime)
   }
   /**
    * @method fromNumber
@@ -97,8 +165,9 @@ class Literal extends Term {
     } else {
       datatype = XSD.double
     }
-    return Term.literalByValue(strValue, null, datatype)
+    return Literal.find(strValue, null, datatype)
   }
+
   /**
    * @method fromValue
    * @param value
@@ -121,13 +190,14 @@ class Literal extends Term {
       case 'number':
         return Literal.fromNumber(value)
       case 'string':
-        return Term.literalByValue(value, null, XSD.string)
+        return Literal.find(value, null, XSD.string)
     }
     throw new Error("Can't make literal from " + value + ' of type ' +
       typeof value)
 
   }
 }
+
 Literal.termType = 'Literal'
 Literal.prototype.classOrder = ClassOrder['Literal']
 Literal.prototype.datatype = XSD.string

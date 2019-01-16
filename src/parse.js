@@ -8,7 +8,9 @@ const N3Parser = require('./n3parser')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
 const RDFParser = require('./rdfxmlparser')
 const sparqlUpdateParser = require('./patch-parser')
-const Term = require('./term')
+const BlankNode = require('./blank-node')
+const NamedNode = require('./named-node')
+const Literal = require('./literal')
 const Util = require('./util')
 
 /**
@@ -151,13 +153,13 @@ function parse (str, kb, base, contentType, callback) {
     if (N3.Util.isLiteral(termString)) {
       value = N3.Util.getLiteralValue(termString)
       var language = N3.Util.getLiteralLanguage(termString)
-      var datatype = Term.namedNodeByIRI(N3.Util.getLiteralType(termString))
-      return Term.literalByValue(value, language, datatype)
+      var datatype = NamedNode.find(N3.Util.getLiteralType(termString))
+      return Literal.find(value, language, datatype)
     } else if (N3.Util.isIRI(termString)) {
-      return Term.namedNodeByIRI(termString)
+      return NamedNode.find(termString)
     } else if (N3.Util.isBlank(termString)) {
       value = termString.substring(2, termString.length)
-      return Term.blankNodeByID(value)
+      return BlankNode.find(value)
     } else {
       return null
     }

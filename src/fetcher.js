@@ -1067,7 +1067,7 @@ class Fetcher {
    */
   putBack (uri, options = {}) {
     uri = uri.uri || uri // Accept object or string
-    let doc = Term.namedNodeByIRI(uri).doc() // strip off #
+    let doc = NamedNode.find(uri).doc() // strip off #
     options.contentType = options.contentType || 'text/turtle'
     options.data = serialize(doc, this.store, doc.uri, options.contentType)
     return this.webOperation('PUT', uri, options)

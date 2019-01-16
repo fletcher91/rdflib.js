@@ -26,7 +26,7 @@ class BlankNode extends Term {
 
       this.id = BlankNode.normalizeID(id)
 
-      const existing = Term.bnMap[this.id]
+      const existing = BlankNode.bnMap[this.id]
       if (existing) {
         return existing
       }
@@ -35,7 +35,7 @@ class BlankNode extends Term {
     }
 
     this.value = this.id
-    Term.addBn(this)
+    BlankNode.mem(this)
   }
 
   compareTerm (other) {
@@ -66,6 +66,39 @@ class BlankNode extends Term {
 
   generateString () {
     return BlankNode.NTAnonymousNodePrefix + this.id
+  }
+
+  /**
+   * Retrieve or create a BlankNode by its ID
+   * @param idOrIRI? {string} The ID of the blank node or a hash fragment IRI
+   * @return {BlankNode} The resolved or created BlankNode
+   */
+  static find(idOrIRI) {
+    const BlankNode = require('./blank-node')
+    const id = BlankNode.normalizeID(idOrIRI)
+    const fromMap = Term.bnMap[id]
+    if (fromMap !== undefined) {
+      return fromMap
+    }
+
+    return new BlankNode(id);
+  }
+
+  /**
+   * Assigns an index number and adds a BlankNode instance to the indices
+   * @private
+   * @param bn The BlankNode instance to register
+   * @return {BlankNode} The updated BlankNode instance
+   */
+  static mem(bn) {
+    if (bn.sI) {
+      throw new Error(`BlankNode ${bn} already registered`)
+    }
+
+    bn.sI = ++Term.termIndex
+    Term.termMap[bn.sI] = Term.bnMap[bn.value] = bn
+
+    return bn
   }
 }
 

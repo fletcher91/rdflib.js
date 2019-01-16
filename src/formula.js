@@ -3,11 +3,12 @@
 const ClassOrder = require('./class-order')
 const Collection = require('./collection')
 const log = require('./log')
+const BlankNode = require('./blank-node')
 const NamedNode = require('./named-node')
+const Literal = require('./literal')
 const Node = require('./node')
 const Serializer = require('./serialize')
 const Statement = require('./statement')
-const Term = require('./term')
 const Variable = require('./variable')
 
 /** @module formula */
@@ -44,7 +45,7 @@ class Formula extends Node {
     return this.statements.push(st)
   }
   bnode (id) {
-    return Term.blankNodeByID(id)
+    return BlankNode.find(id)
   }
 
   addAll (statements) {
@@ -85,7 +86,11 @@ class Formula extends Node {
   }
 
   anyStatementMatching (subj, pred, obj, why) {
-    return this.statements.find(this.wildcardCompare(subj, pred, obj, why))
+    var x = this.statementsMatching(subj, pred, obj, why, true)
+    if (!x || x.length === 0) {
+      return undefined
+    }
+    return x[0]
   }
 
   /** Search the Store
@@ -429,7 +434,7 @@ class Formula extends Node {
         str = str.replace(/\\\\/g, '\\')
         return this.literal(str, lang, dt)
       case '_':
-        return Term.blankNodeByID(str.slice(2))
+        return BlankNode.find(str.slice(2))
       case '?':
         return new Variable(str.slice(1))
     }
@@ -450,14 +455,13 @@ class Formula extends Node {
         }
         return true
       } else if (s instanceof Statement) {
-        return this.statements.indexOf(s) >= 0
+        return this.anyStatementMatching(s.subject, s.predicate, s.object, s.why) !== undefined
       } else if (s.statements) {
         return this.holds(s.statements)
       }
     }
 
-    var st = this.anyStatementMatching(s, p, o, g)
-    return st != null
+    return this.anyStatementMatching(s, p, o, g) !== undefined
   }
   holdsStatement (st) {
     return this.holds(st.subject, st.predicate, st.object, st.why)
@@ -470,7 +474,7 @@ class Formula extends Node {
     return collection
   }
   literal (val, lang, dt) {
-    return Term.literalByValue(val, lang, dt)
+    return Literal.find(val, lang, dt)
   }
   /**
    * transform a collection of NTriple URIs into their URI strings
@@ -531,7 +535,7 @@ class Formula extends Node {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
     }
-    return Term.namedNodeByIRI(uri)
+    return NamedNode.find(uri)
   }
   the (s, p, o, g) {
     var x = this.any(s, p, o, g)
@@ -629,7 +633,7 @@ class Formula extends Node {
     return st =>
       (!subj || subj === st.subject) &&
       (!pred || pred === st.predicate) &&
-      (!obj || subj === st.object) &&
+      (!obj || obj === st.object) &&
       (!why || why === st.why);
   }
 }

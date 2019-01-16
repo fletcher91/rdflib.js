@@ -2,7 +2,6 @@
 
 import { expect } from 'chai'
 
-import Term from '../../src/term'
 import NamedNode from '../../src/named-node'
 
 describe('NamedNode', () => {
@@ -20,7 +19,7 @@ describe('NamedNode', () => {
     })
 
     it('should return an existing instance if present', () => {
-      const existing = Term.namedNodeByIRI('http://example.com/2')
+      const existing = NamedNode.find('http://example.com/2')
       expect(new NamedNode('http://example.com/2').sI).to.equal(existing.sI)
     })
   })
