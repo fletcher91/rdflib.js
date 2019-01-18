@@ -2,8 +2,24 @@
 const BlankNode = require('./blank-node')
 const ClassOrder = require('./class-order')
 const Node = require('./node')
+const Term = require('./term')
 
-class Collection extends Node {
+class Collection extends Term {
+  static mem(coll) {
+    if (coll.sI) {
+      throw new Error(`Collection ${coll} already registered`)
+    }
+
+    coll.sI = ++Term.termIndex
+    Term.termMap[coll.sI] = coll
+
+    return coll
+  }
+
+  /**
+   * To keep the code simple, all collections are instantiated uniquely,
+   * so keep track of the proper references.
+   */
   constructor (initial) {
     super()
     this.termType = Collection.termType
@@ -15,6 +31,7 @@ class Collection extends Node {
         this.elements.push(Node.fromValue(element))
       })
     }
+    Collection.mem(this)
   }
   append (element) {
     return this.elements.push(element)

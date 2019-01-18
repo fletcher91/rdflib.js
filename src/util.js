@@ -312,11 +312,11 @@ function heavyCompareSPO (x, y, g, uriMap) {
 }
 
 function lookup(s, p, o, g, map) {
-  const sMap = map[s.sI]
-  const pMap = sMap && sMap[p]
-  const oMap = pMap && pMap[o]
-  if (oMap) {
-    return oMap[g.sI]
+  let nextMap = map[s.sI]
+  nextMap = nextMap && nextMap[p.sI]
+  nextMap = nextMap && nextMap[o.sI]
+  if (nextMap) {
+    return nextMap[g.sI]
   }
 
   return undefined;

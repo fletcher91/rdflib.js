@@ -36,7 +36,7 @@ class Formula extends Node {
   * @param {Node} graph - the last part of the statemnt
   */
   add (subject, predicate, object, graph) {
-    return this.statements.push(new Statement(subject, predicate, object, graph))
+    return this.statements.push(Statement.from(subject, predicate, object, graph))
   }
   /** Add a statment object
   * @param {Statement} statement - an existing constructed statement to add
@@ -105,6 +105,9 @@ class Formula extends Node {
    * @returns {Array<Node>} - An array of nodes which match the wildcard position
    */
   statementsMatching (subj, pred, obj, why, justOne) {
+    if (justOne) {
+      return [this.statements.find(this.wildcardCompare(subj, pred, obj, why))]
+    }
     return this.statements.filter(this.wildcardCompare(subj, pred, obj, why))
   }
   /**
@@ -455,7 +458,7 @@ class Formula extends Node {
         }
         return true
       } else if (s instanceof Statement) {
-        return this.anyStatementMatching(s.subject, s.predicate, s.object, s.why) !== undefined
+        return this.statements.indexOf(s) >= 0
       } else if (s.statements) {
         return this.holds(s.statements)
       }
@@ -464,7 +467,7 @@ class Formula extends Node {
     return this.anyStatementMatching(s, p, o, g) !== undefined
   }
   holdsStatement (st) {
-    return this.holds(st.subject, st.predicate, st.object, st.why)
+    return this.statements.indexOf(st) >= 0
   }
   list (values) {
     let collection = new Collection()

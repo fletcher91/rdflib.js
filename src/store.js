@@ -21,11 +21,10 @@ const Formula = require('./formula')
 // const log = require('./log')
 const RDFArrayRemove = require('./util').RDFArrayRemove
 const Statement = require('./statement')
+const NamedNode = require('./named-node');
 const Node = require('./node')
 const ns = require('./ns')
 const Variable = require('./variable')
-
-const defaultGraphURI = 'chrome:theSession'
 
 // Handle Functional Property
 function handleFP (formula, subj, pred, obj) {
@@ -97,12 +96,8 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       'InverseFunctionalProperty',
       'FunctionalProperty'
     ]
-    this.defaultGraphIRI = this.sym(defaultGraphURI)
     this.initPropertyActions(this.features)
-  }
-
-  static get defaultGraphURI () {
-    return defaultGraphURI
+    this.defaultGraphIRI = Statement.defaultGraph
   }
 
   substitute (bindings) {
@@ -249,8 +244,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
    */
   addStatement (st) {
     if (!st.why) {
-      // system generated
-      st.why = this.fetcher ? this.fetcher.appNode : this.defaultGraphIRI
+      throw new Error('Statement without graph given')
     }
 
     if (this.predicateCallback) {
@@ -258,7 +252,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     }
 
     // Action return true if the statement does not need to be added
-    const predHash = this.canon(st.predicate).hashString()
+    const predHash = this.canon(st.predicate).sI
     const actions = this.propertyActions[predHash] // Predicate hash
     var done = false
     if (actions) {
@@ -277,10 +271,10 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     // Don't put it in the store
     // still return this statement for owl:sameAs input
     const hash = [
-      this.canon(st.subject).hashString(),
+      this.canon(st.subject).sI,
       predHash,
-      this.canon(st.object).hashString(),
-      this.canon(st.why).hashString()
+      this.canon(st.object).sI,
+      this.canon(st.why).sI
     ]
     let i, ix, h
     for (let i = 0; i < 4; i++) {
@@ -470,18 +464,13 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
    * Standard RDFJS Taskforce method for Source objects, implemented as an
    * alias to `statementsMatching()`
    * @method match
-   * @param subject {Node|String|Object}
-   * @param predicate {Node|String|Object}
-   * @param object {Node|String|Object}
-   * @param graph {NamedNode|String}
+   * @param subject {Node}
+   * @param predicate {Node}
+   * @param object {Node}
+   * @param graph {NamedNode}
    */
   match (subject, predicate, object, graph) {
-    return this.statementsMatching(
-      Node.fromValue(subject),
-      Node.fromValue(predicate),
-      Node.fromValue(object),
-      Node.fromValue(graph)
-    )
+    return this.statementsMatching(subject, predicate, object, graph)
   }
 
   /**
@@ -667,7 +656,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
           this.aliases[newhash].push(this.aliases[oldhash][i])
         }
       }
-      this.add(small, this.sym('http://www.w3.org/2007/ont/link#uri'), big.uri)
+      this.add(small, this.sym('http://www.w3.org/2007/ont/link#uri'), big, Statement.defaultGraph)
       // If two things are equal, and one is requested, we should request the other.
       if (this.fetcher) {
         this.fetcher.nowKnownAs(big, small)
@@ -724,7 +713,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
    * @param {Node} predicate - A node to search for as predicate, or if null, a wildcard
    * @param {Node} object - A node to search for as object, or if null, a wildcard
    * @param {Node} graph - A node to search for as graph, or if null, a wildcard
-   * @param {Boolean} justOne - flag - stop when found one rather than get all of them?
+   * @param {Boolean?} justOne - flag - stop when found one rather than get all of them?
    * @returns {Array<Node>} - An array of nodes which match the wildcard position
    */
   statementsMatching (subj, pred, obj, why, justOne) {
@@ -737,7 +726,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     var p
     var list
     for (p = 0; p < 4; p++) {
-      pattern[p] = this.canon(Node.fromValue(pat[p]))
+      pattern[p] = this.canon(pat[p])
       if (!pattern[p]) {
         wild.push(p)
       } else {
@@ -787,7 +776,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
 
       for (i = 0; i < check.length; i++) { // for each position to be checked
         p = check[i]
-        if (!this.canon(st[parts[p]]).sameTerm(pattern[p])) {
+        if (this.canon(st[parts[p]]) !== pattern[p]) {
           st = null
           break
         }
@@ -816,5 +805,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     return res
   }
 }
-module.exports = IndexedFormula
+IndexedFormula.defaultGraphURI = Statement.defaultGraph
 IndexedFormula.handleRDFType = handleRDFType
+
+module.exports = IndexedFormula

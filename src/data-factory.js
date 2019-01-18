@@ -43,10 +43,10 @@ function namedNode (value) {
 }
 function quad (subject, predicate, object, graph) {
   graph = graph || new DefaultGraph()
-  return new Statement(subject, predicate, object, graph)
+  return Statement.from(subject, predicate, object, graph)
 }
 function st (subject, predicate, object, graph) {
-  return new Statement(subject, predicate, object, graph)
+  return Statement.from(subject, predicate, object, graph)
 }
 function triple (subject, predicate, object) {
   return quad(subject, predicate, object)

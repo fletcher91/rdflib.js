@@ -1,15 +1,26 @@
 'use strict'
-const Node = require('./node')
+const NamedNode = require('./named-node')
 const { lookup, writeToMap } = require('./util')
 
+// The default graph shouldn't have a name, but 'chrome:theSession' is used for backwards compatibility
+const defaultGraphNode = new NamedNode('chrome:theSession');
+
 class Statement {
+  /**
+   * The default graph has no name (https://www.w3.org/TR/rdf11-concepts/#dfn-default-graph), which
+   * would mean `null`, so we default to a special NamedNode to keep interfaces consistent.
+   */
+  static get defaultGraph() {
+    return defaultGraphNode;
+  }
+
   static from(s, p, o, g) {
-    const existing = lookup(s, p, o, g, Statement.stMap)
+    const existing = lookup(s, p, o, g || Statement.defaultGraph, Statement.stMap)
     if (existing) {
       return existing
     }
 
-    return new Statement(s, p, o, g)
+    return new Statement(s, p, o, g || Statement.defaultGraph)
   }
 
   /* Construct a new statment
@@ -29,10 +40,10 @@ class Statement {
   ** powerful update() which can update more than one docment.
   */
   constructor (subject, predicate, object, graph) {
-    this.subject = (subject && subject.hasOwnProperty('termType')) ? subject : Node.fromValue(subject)
-    this.predicate = (predicate && predicate.hasOwnProperty('termType')) ? predicate : Node.fromValue(predicate)
-    this.object = (object && object.hasOwnProperty('termType')) ? object : Node.fromValue(object)
-    this.why = (graph && graph.hasOwnProperty('termType')) ? graph : Node.fromValue(graph) // property currently used by rdflib
+    this.subject = subject
+    this.predicate = predicate
+    this.object = object
+    this.why = graph || Statement.defaultGraph
     const existing = lookup(this.subject, this.predicate, this.object, this.why, Statement.stMap)
     if (existing) {
       return existing
@@ -41,7 +52,7 @@ class Statement {
       this.subject.sI,
       this.predicate.sI,
       this.object.sI,
-      this.why ? this.why.sI : undefined,
+      this.why.sI,
       this,
       Statement.stMap
     )
@@ -53,8 +64,7 @@ class Statement {
     this.why = g
   }
   equals (other) {
-    return other.subject.equals(this.subject) && other.predicate.equals(this.predicate) &&
-      other.object.equals(this.object) && other.graph.equals(this.graph)
+    return this === other
   }
   substitute (bindings) {
     const y = new Statement(
@@ -79,6 +89,14 @@ class Statement {
   toNT () {
     return [this.subject.toNT(), this.predicate.toNT(),
       this.object.toNT()].join(' ') + ' .'
+  }
+  toQuad () {
+    return [
+      this.subject,
+      this.predicate,
+      this.object,
+      this.why
+    ]
   }
   toString () {
     return this.toNT()

@@ -432,7 +432,7 @@ class Fetcher {
       throw new Error('No _fetch function availble for Fetcher')
     }
 
-    this.appNode = this.store.bnode() // Denoting this session
+    this.appNode = Object.hasOwnProperty.call(options, 'graph') || this.store.bnode() // Denoting this session
     this.store.fetcher = this // Bi-linked
     this.requested = {}
     // this.requested[uri] states:
@@ -940,7 +940,7 @@ class Fetcher {
     this.addStatus(options.req, errorMessage)
 
     if (!options.noMeta) {
-      this.store.add(options.original, ns.link('error'), errorMessage)
+      this.store.add(options.original, ns.link('error'), this.store.literal(errorMessage))
     }
 
     let meth = (options.method || 'GET').toUpperCase()
@@ -1289,7 +1289,7 @@ class Fetcher {
 
     // Save the response headers
     response.headers.forEach((value, header) => {
-      kb.add(responseNode, ns.httph(header), value, responseNode)
+      kb.add(responseNode, ns.httph(header), kb.literal(value), responseNode)
 
       if (header === 'content-type') {
         kb.add(options.resource, ns.rdf('type'), Util.mediaTypeClass(value), responseNode)

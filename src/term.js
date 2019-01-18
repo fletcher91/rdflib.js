@@ -16,6 +16,7 @@ class Term extends Node {
 
     // Complete the object shape https://stackoverflow.com/a/44467873
     this.sI = undefined
+    this.string = "";
   }
 
 

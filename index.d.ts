@@ -45,6 +45,8 @@ declare module "rdflib" {
                                   obj: SomeTerm,
                                   why: Node) => boolean;
 
+    export type Quadruple = [SomeNode, NamedNode, SomeTerm, Node];
+
     export type ToJSOutputTypes = string | number | Date | boolean | object |
         string[] | number[] | Date[] | boolean[] | object[];
 
@@ -223,6 +225,8 @@ declare module "rdflib" {
 
         public addAll(statements: Statement[]): void;
 
+        public addStatement(st: Statement): Statement | null;
+
         public any(subj: OptionalNode,
                    pred?: OptionalNode,
                    obj?: OptionalNode,
@@ -299,7 +303,7 @@ declare module "rdflib" {
     }
 
     export class Statement {
-        public static from(s: SomeNode, p: NamedNode, o: SomeTerm, g: Node): Statement;
+        public static from(s: SomeNode, p: NamedNode, o: SomeTerm, g?: SomeNode): Statement;
 
         public object: SomeTerm;
 
@@ -307,18 +311,20 @@ declare module "rdflib" {
 
         public subject: SomeNode;
 
-        public why: Node;
+        public why: SomeNode;
 
         public constructor(subject: SomeNode,
                            predicate: NamedNode,
                            object: SomeTerm,
-                           why?: Node | string | undefined);
+                           why?: SomeNode);
 
         public equals(other: Statement): boolean;
 
         public substitute(bindings: Statement): Statement;
 
         public toNT(): string;
+
+        public toQuad(): Quadruple;
 
         public toString(): string;
     }
