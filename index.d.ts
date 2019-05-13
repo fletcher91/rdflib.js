@@ -331,7 +331,7 @@ declare module "rdflib" {
 
     export type NamedNamespace = (ln: string) => NamedNode;
 
-    export function Namespace(nsuri: string): (ln: string) => NamedNode;
+    export function Namespace(nsuri: string, terms?: string[]): (ln: string) => NamedNode;
 
     export function parse(str: string, kb: Formula, base: string, contentType: string, callback: () => void): void;
 
