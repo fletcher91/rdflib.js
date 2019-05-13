@@ -145,6 +145,7 @@ declare module "rdflib" {
     export interface FetcherOpts {
         fetch?: GlobalFetch["fetch"];
         headers?: { [k: string]: string };
+        handlers?: any[];
         timeout?: number;
     }
 

@@ -465,7 +465,7 @@ class Fetcher {
     // In switching to fetch(), 'recv', 'headers' and 'load' do not make sense
     Util.callbackify(this, ['request', 'fail', 'refresh', 'retract', 'done'])
 
-    Object.keys(HANDLERS).map(key => this.addHandler(HANDLERS[key]))
+    Object.keys(options.handlers || HANDLERS).map(key => this.addHandler(HANDLERS[key]))
   }
 
   static crossSiteProxy (uri) {
