@@ -330,9 +330,13 @@ declare module "rdflib" {
         public toString(): string;
     }
 
-    export type NamedNamespace = (ln: string) => NamedNode;
+    type NSFactory = (ln: string) => NamedNode;
 
-    export function Namespace(nsuri: string, terms?: string[]): (ln: string) => NamedNode;
+    export type NamedNamespace<P extends {}> = P & NSFactory;
+
+    export function Namespace<T extends string, U = { [K in T]: NamedNode }>(nsuri: string, terms?: T[]): NamedNamespace<U>;
+
+    export function generateNamespaceMap<T extends {}, U = { [k: string]: NamedNamespace<unknown & object> }>(nsm: T): Readonly<U>;
 
     export function parse(str: string, kb: Formula, base: string, contentType: string, callback: () => void): void;
 
