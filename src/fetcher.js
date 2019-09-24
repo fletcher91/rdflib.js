@@ -25,6 +25,7 @@
  * To do:
  * Firing up a mail client for mid:  (message:) URLs
  */
+import rdfFactory from '@ontologies/core'
 import IndexedFormula from './store'
 import log from './log'
 import N3Parser from './n3parser'
@@ -859,7 +860,7 @@ export default class Fetcher {
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referringTerm = undefined
-    } else if (p2 instanceof NamedNode) {
+    } else if (p2.termType === "NamedNode") {
       // referringTerm = p2
       options.referringTerm = p2
     } else {
@@ -1067,7 +1068,7 @@ export default class Fetcher {
    */
   putBack (uri, options = {}) {
     uri = uri.uri || uri // Accept object or string
-    let doc = new NamedNode(uri).doc() // strip off #
+    let doc = rdfFactory.namedNode(uri).doc() // strip off #
     options.contentType = options.contentType || 'text/turtle'
     options.data = serialize(doc, this.store, doc.uri, options.contentType)
     return this.webOperation('PUT', uri, options)

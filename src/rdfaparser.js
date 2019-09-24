@@ -11,11 +11,10 @@
 
 // options.base = base URI    not really an option, shopuld always be set.
 //
+import rdfFactory from '@ontologies/core'
+import rdf from '@ontologies/rdf'
+import XSD from '@ontologies/xsd'
 
-import BlankNode from './blank-node'
-import Literal from './literal'
-import rdf from './data-factory'
-import NamedNode from './named-node'
 import * as Uri from './uri'
 import * as Util from './util'
 
@@ -67,13 +66,13 @@ export default class RDFaProcessor {
   addTriple (origin, subject, predicate, object) {
     var su, ob, pr, or
     if (typeof subject === 'undefined') {
-      su = rdf.namedNode(this.options.base)
+      su = rdfFactory.namedNode(this.options.base)
     } else {
       su = this.toRDFNodeObject(subject)
     }
     pr = this.toRDFNodeObject(predicate)
     ob = this.toRDFNodeObject(object)
-    or = rdf.namedNode(this.options.base)
+    or = rdfFactory.namedNode(this.options.base)
     // console.log('Adding { ' + su + ' ' + pr + ' ' + ob + ' ' + or + ' }')
     this.kb.add(su, pr, ob, or)
   }
@@ -309,7 +308,7 @@ export default class RDFaProcessor {
         for (let predicate in item.listMapping) {
           var list = item.listMapping[predicate]
           if (list.length === 0) {
-            this.addTriple(item.parent, item.subject, predicate, { type: RDFaProcessor.objectURI, value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil' })
+            this.addTriple(item.parent, item.subject, predicate, { type: RDFaProcessor.objectURI, value: rdf.nil.value })
             continue
           }
           var bnodes = []
@@ -318,8 +317,8 @@ export default class RDFaProcessor {
           // this.newSubject(item.parent,bnodes[i])
           }
           for (let i = 0; i < bnodes.length; i++) {
-            this.addTriple(item.parent, bnodes[i], 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first', list[i])
-            this.addTriple(item.parent, bnodes[i], 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest', { type: RDFaProcessor.objectURI, value: (i + 1) < bnodes.length ? bnodes[i + 1] : 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil' })
+            this.addTriple(item.parent, bnodes[i], rdf.first.value, list[i])
+            this.addTriple(item.parent, bnodes[i], rdf.rest.value, { type: RDFaProcessor.objectURI, value: (i + 1) < bnodes.length ? bnodes[i + 1] : rdf.nil.value })
           }
           this.addTriple(item.parent, item.subject, predicate, { type: RDFaProcessor.objectURI, value: bnodes[0] })
         }
@@ -875,32 +874,32 @@ export default class RDFaProcessor {
     if (typeof x === 'string') {
       if (x.substring(0, 2) === '_:') {
         if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
-          this.blankNodes[x.substring(2)] = new BlankNode(x.substring(2))
+          this.blankNodes[x.substring(2)] = rdfFactory.blankNode(x.substring(2))
         }
         return this.blankNodes[x.substring(2)]
       }
-      return rdf.namedNode(x)
+      return rdfFactory.namedNode(x)
     }
     switch (x.type) {
       case RDFaProcessor.objectURI:
         if (x.value.substring(0, 2) === '_:') {
           if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
-            this.blankNodes[x.value.substring(2)] = new BlankNode(x.value.substring(2))
+            this.blankNodes[x.value.substring(2)] = rdfFactory.blankNode(x.value.substring(2))
           }
           return this.blankNodes[x.value.substring(2)]
         }
-        return rdf.namedNode(x.value)
+        return rdfFactory.namedNode(x.value)
       case RDFaProcessor.PlainLiteralURI:
-        return new Literal(x.value, x.language || '')
+        return rdfFactory.literal(x.value, x.language || '')
       case RDFaProcessor.XMLLiteralURI:
       case RDFaProcessor.HTMLLiteralURI:
         var string = ''
         Object.keys(x.value).forEach(function (i) {
           string += Util.domToString(x.value[i], this.htmlOptions)
         })
-        return new Literal(string, '', new NamedNode(x.type))
+        return rdfFactory.literal(string, rdfFactory.namedNode(x.type))
       default:
-        return new Literal(x.value, '', new NamedNode(x.type))
+        return rdfFactory.literal(x.value, rdfFactory.namedNode(x.type))
     }
   }
 
@@ -912,13 +911,11 @@ export default class RDFaProcessor {
   }
 }
 
-RDFaProcessor.XMLLiteralURI =
-  'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral'
-RDFaProcessor.HTMLLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML'
-RDFaProcessor.PlainLiteralURI =
-  'http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral'
-RDFaProcessor.objectURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#object'
-RDFaProcessor.typeURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+RDFaProcessor.XMLLiteralURI = rdf.XMLLiteral.value
+RDFaProcessor.HTMLLiteralURI = rdf.HTML.value
+RDFaProcessor.PlainLiteralURI = rdf.PlainLiteral.value
+RDFaProcessor.objectURI = rdf.object.value
+RDFaProcessor.typeURI = rdf.type.value
 RDFaProcessor.nameChar =
   '[-A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF\.0-9\u00B7\u0300-\u036F\u203F-\u2040]'
 RDFaProcessor.nameStartChar =
@@ -937,17 +934,17 @@ RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
 
 RDFaProcessor.dateTimeTypes = [
   { pattern: /-?P(?:[0-9]+Y)?(?:[0-9]+M)?(?:[0-9]+D)?(?:T(?:[0-9]+H)?(?:[0-9]+M)?(?:[0-9]+(?:\.[0-9]+)?S)?)?/,
-    type: 'http://www.w3.org/2001/XMLSchema#duration' },
+    type: XSD.duration.value },
   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]-[0-9][0-9]T(?:[0-1][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?(?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
-    type: 'http://www.w3.org/2001/XMLSchema#dateTime' },
+    type: XSD.dateTime.value },
   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]-[0-9][0-9](?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
-    type: 'http://www.w3.org/2001/XMLSchema#date' },
+    type: XSD.date.value },
   { pattern: /(?:[0-1][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?(?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
-    type: 'http://www.w3.org/2001/XMLSchema#time' },
+    type: XSD.time.value },
   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]/,
-    type: 'http://www.w3.org/2001/XMLSchema#gYearMonth' },
+    type: XSD.gYearMonth.value },
   { pattern: /-?[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9]/,
-    type: 'http://www.w3.org/2001/XMLSchema#gYear' }
+    type: XSD.gYear.value }
 ]
 
 const parseRDFaDOM = RDFaProcessor.parseRDFaDOM

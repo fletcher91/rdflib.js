@@ -2,10 +2,10 @@
  * Utility functions for $rdf
  * @module util
  */
+import rdfFactory from '@ontologies/core'
 import { docpart } from './uri'
 import log from './log'
 import * as uri from './uri'
-import NamedNode from './named-node'
 
 const string = { template: stringTemplate }
 
@@ -13,11 +13,11 @@ export { log, uri, string }
 
 export function mediaTypeClass(mediaType){
   mediaType = mediaType.split(';')[0].trim()  // remove media type parameters
-  return new NamedNode('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
+  return rdfFactory.namedNode('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
 }
 
 export function linkRelationProperty(relation){
-  return new NamedNode('http://www.w3.org/ns/iana/link-relations/relation#' + relation.trim())
+  return rdfFactory.namedNode('http://www.w3.org/ns/iana/link-relations/relation#' + relation.trim())
 }
 
 /**

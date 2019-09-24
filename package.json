@@ -1,7 +1,7 @@
 {
-  "name": "rdflib",
+  "name": "link-rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "1.0.4",
+  "version": "1.0.4-datafactory-7",
   "engines": {
     "node": ">=6.0"
   },
@@ -33,6 +33,10 @@
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
     "@babel/runtime": "^7.5.5",
+    "@ontologies/core": "^1.5.2-strict",
+    "@ontologies/rdf": "^1.0.0",
+    "@ontologies/rdfs": "^1.0.0",
+    "@ontologies/xsd": "^1.0.0",
     "async": "^3.1.x",
     "jsonld": "^1.6.2",
     "n3": "^1.2.0",

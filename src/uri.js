@@ -10,7 +10,7 @@
  */
 var alert = alert || console.log
 
-import NamedNode from './named-node'
+import NamedNode from './dataFactory/named-node-internal'
 
 export function docpart (uri) {
   var i

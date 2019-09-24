@@ -1,8 +1,9 @@
 'use strict'
 
+import rdfFactory from '@ontologies/core'
 // This file attaches all functionality to Node
 // that would otherwise require circular dependencies.
-import Node from './node-internal'
+import Node from './dataFactory/node-internal'
 import Collection from './collection'
 import Literal from './literal'
 
@@ -32,6 +33,48 @@ Node.fromValue = function fromValue (value) {
 
 import Namespace from './namespace'
 const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
+
+Node.substitute = function substitute (node, bindings) {
+  console.log('@@@ node substitute' + node)
+  return node
+}
+Node.compareTerm = function compareTerm (one, other) {
+  if (one.classOrder < other.classOrder) {
+    return -1
+  }
+  if (one.classOrder > other.classOrder) {
+    return +1
+  }
+  if (one.value < other.value) {
+    return -1
+  }
+  if (one.value > other.value) {
+    return +1
+  }
+  return 0
+}
+Node.equals = function equals (one, other) {
+  if (!other) {
+    return false
+  }
+  return (one.termType === other.termType) &&
+    (one.value === other.value)
+}
+Node.hashString = function hashString (node) {
+  return node.toCanonical()
+}
+Node.sameTerm = function sameTerm (node, other) {
+  return rdfFactory.equals(node, other)
+}
+Node.toCanonical = function toCanonical (node) {
+  return node.toNT()
+}
+Node.toNT = function toNT (node) {
+  return node.constructor.toString(node)
+}
+Node.toString = function toString (node) {
+  throw new Error('Node.toString() is abstract - see the subclasses instead')
+}
 
 Node.toJS = function toJS (term) {
   if (term.elements) {

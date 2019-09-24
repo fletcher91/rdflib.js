@@ -1,10 +1,8 @@
-import BlankNode from './blank-node'
-import DataFactory from './data-factory'
+import DataFactory from '@ontologies/core'
 import jsonld from 'jsonld'
-import Literal from './literal'
 import { Parser as N3jsParser } from 'n3'  // @@ Goal: remove this dependency
+
 import N3Parser from './n3parser'
-import NamedNode from './named-node'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'

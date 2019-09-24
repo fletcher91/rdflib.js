@@ -5,11 +5,12 @@
 ** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
 ** Licence: MIT
 */
-import NamedNode from './named-node'
-import BlankNode from './blank-node'
+import rdfFactory from '@ontologies/core'
+import rdf from '@ontologies/rdf'
+import XSD from '@ontologies/xsd'
+
 import * as Uri from './uri'
 import * as Util from './util'
-import XSD from './xsd'
 
 export default (function () {
   var __Serializer = function (store) {
@@ -216,7 +217,7 @@ export default (function () {
       var list = x.elements
       var rest = kb.sym(rdfns + 'nill')
       for (var i = list.length - 1; i >= 0; i--) {
-        var bnode = new BlankNode()
+        var bnode = rdfFactory.blankNode()
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
         rest = bnode
@@ -480,7 +481,7 @@ export default (function () {
         var str = this.stringToN3(expr.value)
         if (expr.language) {
           str += '@' + expr.language
-        } else if (!expr.datatype.equals(XSD.string)) {
+        } else if (!rdfFactory.equals(expr.datatype, XSD.string)) {
           str += '^^' + this.atomicTermToN3(expr.datatype, stats)
         }
         return str
@@ -790,7 +791,7 @@ export default (function () {
       for (var i = 0; i < sts.length; i++) {
         st = sts[i]
         // look for a type
-        if (st.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType === 'symbol') {
+        if (st.predicate.uri === rdf.type.value && !type && st.object.termType === 'symbol') {
           type = st.object
           continue // don't include it as a child element
         }
@@ -804,7 +805,7 @@ export default (function () {
           if (number === intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
+            pred = rdf.ns('li')
           }
         }
 
@@ -826,7 +827,7 @@ export default (function () {
             break
           case 'Literal':
             results = results.concat(['<' + t +
-            (st.object.datatype.equals(XSD.string)
+            (rdfFactory.equals(st.object.datatype, XSD.string)
               ? ''
               : ' rdf:datatype="' + escapeForXML(st.object.datatype.uri) + '"') +
             (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
@@ -892,7 +893,7 @@ export default (function () {
             break
           case 'Literal':
             results = results.concat(['<' + qname(st.predicate) +
-              (st.object.datatype.equals(XSD.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
+              (rdfFactory.equals(st.object.datatype, XSD.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
               (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
               '>' + escapeForXML(st.object.value) +
               '</' + qname(st.predicate) + '>'])

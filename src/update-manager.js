@@ -4,10 +4,11 @@
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL addred local file write code
 */
+import DataFactory from '@ontologies/core'
+
 import IndexedFormula from './store'
 import { docpart } from './uri'
 import Fetcher from './fetcher'
-import DataFactory from './data-factory'
 import Namespace from './namespace'
 import Serializer from './serializer'
 import { join as uriJoin } from './uri'
