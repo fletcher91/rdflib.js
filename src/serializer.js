@@ -5,13 +5,13 @@
 ** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
 ** Licence: MIT
 */
-import NamedNode from './named-node'
-import BlankNode from './blank-node'
+import rdfFactory from '@ontologies/core'
+
 import * as Uri from './uri'
 import * as Util from './util'
-import XSD from './xsd'
+import { createXSD } from './xsd'
 
-export default (function () {
+export default (function Serializer() {
   var __Serializer = function (store) {
     this.flags = ''
     this.base = null
@@ -28,6 +28,8 @@ export default (function () {
     this.incoming = null // Array not calculated yet
     this.formulas = [] // remebering original formulae from hashes
     this.store = store
+    this.rdfFactory = store.rdfFactory || rdfFactory
+    this.xsd = createXSD(this.rdfFactory)
   }
 
   __Serializer.prototype.setBase = function (base) { this.base = base; return this }
@@ -209,6 +211,7 @@ export default (function () {
     var rdfns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
     var self = this
     var kb = this.store
+    var factory = this.rdfFactory
     var termToNT = function (x) {
       if (x.termType !== 'Collection') {
         return self.atomicTermToN3(x)
@@ -216,7 +219,7 @@ export default (function () {
       var list = x.elements
       var rest = kb.sym(rdfns + 'nill')
       for (var i = list.length - 1; i >= 0; i--) {
-        var bnode = new BlankNode()
+        var bnode = factory.blankNode()
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
         rest = bnode
@@ -480,7 +483,7 @@ export default (function () {
         var str = this.stringToN3(expr.value)
         if (expr.language) {
           str += '@' + expr.language
-        } else if (!expr.datatype.equals(XSD.string)) {
+        } else if (!this.rdfFactory.equals(expr.datatype, this.xsd.string)) {
           str += '^^' + this.atomicTermToN3(expr.datatype, stats)
         }
         return str
@@ -804,7 +807,7 @@ export default (function () {
           if (number === intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
+            pred = this.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
           }
         }
 
@@ -826,7 +829,7 @@ export default (function () {
             break
           case 'Literal':
             results = results.concat(['<' + t +
-            (st.object.datatype.equals(XSD.string)
+            (this.rdfFactory.equals(st.object.datatype, this.xsd.string)
               ? ''
               : ' rdf:datatype="' + escapeForXML(st.object.datatype.uri) + '"') +
             (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
@@ -892,7 +895,7 @@ export default (function () {
             break
           case 'Literal':
             results = results.concat(['<' + qname(st.predicate) +
-              (st.object.datatype.equals(XSD.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
+              (this.rdfFactory.equals(st.object.datatype, this.xsd.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
               (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
               '>' + escapeForXML(st.object.value) +
               '</' + qname(st.predicate) + '>'])

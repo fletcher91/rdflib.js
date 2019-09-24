@@ -1,7 +1,7 @@
 /*
  * Updates-Via
  */
-import DataFactory from './data-factory'
+import DataFactory from '@ontologies/core'
 
 export class UpdatesSocket {
   constructor (parent, via) {

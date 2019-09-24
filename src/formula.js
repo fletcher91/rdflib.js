@@ -1,10 +1,10 @@
 'use strict'
+import rdfFactory, { NamedNode } from '@ontologies/core'
+
 import BlankNode from './blank-node'
 import ClassOrder from './class-order'
 import Collection from './collection'
-import Literal from './literal'
 import log from './log'
-import NamedNode from './named-node'
 import Namespace from './namespace'
 import Node from './node'
 import Serializer from './serialize'
@@ -20,14 +20,17 @@ export default class Formula extends Node {
   * @param constraints - initial array of constraints
   * @param initBindings - initial bindings used in Query
   * @param optional - optional
+  * @param opts
+  * @param opts.rdfFactory - The rdf factory to use for minting terms etc.
   */
-  constructor (statements, constraints, initBindings, optional) {
+  constructor (statements, constraints, initBindings, optional, opts = {}) {
     super()
     this.termType = Formula.termType
     this.statements = statements || []
     this.constraints = constraints || []
     this.initBindings = initBindings || []
     this.optional = optional || []
+    this.rdfFactory = (opts && opts.rdfFactory) || rdfFactory
   }
   /** Add a statement from its parts
   * @param {Node} subject - the first part of the statemnt
@@ -36,7 +39,7 @@ export default class Formula extends Node {
   * @param {Node} graph - the last part of the statemnt
   */
   add (subject, predicate, object, graph) {
-    return this.statements.push(new Statement(subject, predicate, object, graph))
+    return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
   }
   /** Add a statment object
   * @param {Statement} statement - an existing constructed statement to add
@@ -45,7 +48,7 @@ export default class Formula extends Node {
     return this.statements.push(st)
   }
   bnode (id) {
-    return new BlankNode(id)
+    return this.rdfFactory.blankNode(id)
   }
 
   addAll (statements) {
@@ -445,7 +448,7 @@ export default class Formula extends Node {
         str = str.replace(/\\\\/g, '\\')
         return this.literal(str, lang, dt)
       case '_':
-        return new BlankNode(str.slice(2))
+        return this.rdfFactory.blankNode(str.slice(2))
       case '?':
         return new Variable(str.slice(1))
     }
@@ -486,7 +489,7 @@ export default class Formula extends Node {
     return collection
   }
   literal (val, lang, dt) {
-    return new Literal('' + val, lang, dt)
+    return this.rdfFactory.literal('' + val, lang || dt)
   }
   /**
    * transform a collection of NTriple URIs into their URI strings
@@ -547,7 +550,7 @@ export default class Formula extends Node {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
     }
-    return new NamedNode(uri)
+    return this.rdfFactory.namedNode(uri)
   }
   the (s, p, o, g) {
     var x = this.any(s, p, o, g)
@@ -634,9 +637,15 @@ export default class Formula extends Node {
     }
     return tops
   }
+  /** @deprecated Please use the static method {Formula.toString} */
   toString () {
-    return '{' + this.statements.join('\n') + '}'
+    return Formula.toString(this)
   }
+
+  static toString(formula) {
+    return '{' + formula.statements.join('\n') + '}'
+  }
+
   whether (s, p, o, g) {
     return this.statementsMatching(s, p, o, g, false).length
   }

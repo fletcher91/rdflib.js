@@ -1,7 +1,5 @@
-import NamedNode from './named-node'
+import { createNS } from '@ontologies/core'
 
 export default function Namespace (nsuri) {
-  return function (ln) {
-    return new NamedNode(nsuri + (ln || ''))
-  }
+  return createNS(nsuri)
 }

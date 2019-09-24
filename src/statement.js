@@ -1,64 +1,44 @@
 'use strict'
-import Node from './node'
+import rdfFactory from '@ontologies/core'
 
-export default class Statement {
-  /* Construct a new statment
-  **
-  ** @param {Term} subject - The subject of the triple.  What the efact is about
-  ** @ param {Term} predciate - The relationship which is assrted between the subject and object
-  ** @param {Term} object - The thing or data value which is asserted to be related to the subject
-  ** @param {NamedNode} why - The document where thr triple is or was or will be stored on the web.
-  **
-  ** The why param is a named node of the document in which the triple when
-  ** it is stored on the web.
-  ** It is called “why” because when you have read data from varou slaces the
-  **  “why” tells you why you have the triple. (At the moment, it is just the
-  ** document, in future it could be an inference step). When you do
-  ** UpdateManager.update() then the why’s of all the statmemts must be the same,
-  ** and give the document you are patching. In future, we may have a more
-  ** powerful update() which can update more than one docment.
-  */
-  constructor (subject, predicate, object, graph) {
-    this.subject = Node.fromValue(subject)
-    this.predicate = Node.fromValue(predicate)
-    this.object = Node.fromValue(object)
-    this.why = graph  // property currently used by rdflib
-  }
-  get graph () {
-    return this.why
-  }
-  set graph (g) {
-    this.why = g
-  }
-  equals (other) {
-    return other.subject.equals(this.subject) && other.predicate.equals(this.predicate) &&
-      other.object.equals(this.object) && other.graph.equals(this.graph)
-  }
-  substitute (bindings) {
-    const y = new Statement(
-      this.subject.substitute(bindings),
-      this.predicate.substitute(bindings),
-      this.object.substitute(bindings),
-      this.why.substitute(bindings)) // 2016
-    console.log('@@@ statement substitute:' + y)
-    return y
-  }
-  toCanonical () {
-    let terms = [
-      this.subject.toCanonical(),
-      this.predicate.toCanonical(),
-      this.object.toCanonical()
-    ]
-    if (this.graph && this.graph.termType !== 'DefaultGraph') {
-        terms.push(this.graph.toCanonical())
-    }
-    return terms.join(' ') + ' .'
-  }
-  toNT () {
-    return [this.subject.toNT(), this.predicate.toNT(),
-      this.object.toNT()].join(' ') + ' .'
-  }
-  toString () {
-    return this.toNT()
-  }
+import Statement from './dataFactory/statement-internal';
+
+Statement.equals = function equals (one, other) {
+  return rdfFactory.equals(other.subject, one.subject)
+    && rdfFactory.equals(other.predicate, one.predicate)
+    && rdfFactory.equals(other.object, one.object)
+    && rdfFactory.equals(other.graph, one.graph)
 }
+
+Statement.substitute = function substitute (statement, bindings) {
+  const y = new Statement(
+    statement.subject.substitute(bindings),
+    statement.predicate.substitute(bindings),
+    statement.object.substitute(bindings),
+    statement.why.substitute(bindings)) // 2016
+  console.log('@@@ statement substitute:' + y)
+  return y
+}
+
+Statement.toCanonical = function toCanonical (statement) {
+  let terms = [
+    this.subject.toCanonical(),
+    this.predicate.toCanonical(),
+    this.object.toCanonical()
+  ]
+  if (this.graph && this.graph.termType !== 'DefaultGraph') {
+    terms.push(this.graph.toCanonical())
+  }
+  return terms.join(' ') + ' .'
+}
+
+Statement.toNT = function toNT (statement) {
+  return [statement.subject.toNT(), statement.predicate.toNT(),
+    statement.object.toNT()].join(' ') + ' .'
+}
+
+Statement.toString = function toString (statement) {
+  return this.toNT()
+}
+
+export default Statement

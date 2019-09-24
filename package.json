@@ -33,6 +33,7 @@
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
     "@babel/runtime": "^7.5.5",
+    "@ontologies/core": "^1.5.2-strict",
     "async": "^3.1.x",
     "jsonld": "^1.6.2",
     "n3": "^1.2.0",

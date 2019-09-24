@@ -1,13 +1,12 @@
 'use strict'
-import Node from './node'
+import DefaultGraph from './dataFactory/default-graph-internal'
 
-export default class DefaultGraph extends Node {
-  constructor () {
-    super()
-    this.termType = 'DefaultGraph'
-    this.value = ''
-  }
-  toCanonical () {
-    return this.value
-  }
+DefaultGraph.toCanonical = function toCanonical (defaultGraph) {
+  return defaultGraph.value
 }
+
+DefaultGraph.toString = function toString () {
+  return ''
+}
+
+export default DefaultGraph

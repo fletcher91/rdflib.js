@@ -1,71 +1,49 @@
 'use strict'
-import BlankNode from './blank-node'
-import Collection from './collection'
-import DefaultGraph from './default-graph'
+import Collection from './dataFactory/collection-internal'
+import './default-graph' // Enable static methods
 import Fetcher from './fetcher'
 import IndexedFormula from './store'
-import Literal from './literal'
-import NamedNode from './named-node'
+import Literal from './dataFactory/literal-internal'
 import Statement from './statement'
-import Variable from './variable'
+import DataFactory from './dataFactory/data-factory'
 
-const DataFactory = {
-  blankNode,
-  defaultGraph,
-  fetcher,
-  graph,
-  lit,
-  literal,
-  namedNode,
-  quad,
-  st,
-  triple,
-  variable,
-}
-export default DataFactory
+/*
+ * RDFlib specific factory methods
+ */
 
-function blankNode (value) {
-  return new BlankNode(value)
-}
 function collection (elements) {
   return new Collection(elements)
 }
-function defaultGraph () {
-  return new DefaultGraph()
-}
-function fetcher (store, options) {
+export function fetcher (store, options) {
   return new Fetcher(store, options)
 }
-function graph () {
+export function graph () {
   return new IndexedFormula()
 }
-function lit (val, lang, dt) {
+export function lit (val, lang, dt) {
   return new Literal('' + val, lang, dt)
 }
-function literal (value, languageOrDatatype) {
-  if (typeof languageOrDatatype === 'string') {
-    if (languageOrDatatype.indexOf(':') === -1) {
-      return new Literal(value, languageOrDatatype)
-    } else {
-      return new Literal(value, null, namedNode(languageOrDatatype))
-    }
-  } else {
-    return new Literal(value, null, languageOrDatatype)
-  }
-}
-function namedNode (value) {
-  return new NamedNode(value)
-}
-function quad (subject, predicate, object, graph) {
-  graph = graph || new DefaultGraph()
+export function st (subject, predicate, object, graph) {
   return new Statement(subject, predicate, object, graph)
 }
-function st (subject, predicate, object, graph) {
-  return new Statement(subject, predicate, object, graph)
+export function triple (subject, predicate, object) {
+  return DataFactory.quad(subject, predicate, object)
 }
-function triple (subject, predicate, object) {
-  return quad(subject, predicate, object)
-}
-function variable (name) {
-  return new Variable(name)
+
+export default {
+  // rdfjs spec factory methods
+  blankNode: DataFactory.blankNode,
+  defaultGraph: DataFactory.defaultGraph,
+  literal: DataFactory.literal,
+  namedNode: DataFactory.namedNode,
+  quad: DataFactory.quad,
+  variable: DataFactory.variable,
+
+  // rdflib only
+  graph,
+  collection,
+  fetcher,
+  lit,
+  st,
+  triple,
 }

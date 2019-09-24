@@ -25,6 +25,7 @@
  * To do:
  * Firing up a mail client for mid:  (message:) URLs
  */
+import rdfFactory from '@ontologies/core'
 import IndexedFormula from './store'
 import log from './log'
 import N3Parser from './n3parser'
@@ -425,6 +426,7 @@ export default class Fetcher {
   */
   constructor (store, options = {}) {
     this.store = store || new IndexedFormula()
+    this.rdfFactory = options.rdfFactory || (store && store.rdfFactory) || rdfFactory
     this.timeout = options.timeout || 30000
 
     this._fetch = options.fetch || fetch
@@ -466,7 +468,7 @@ export default class Fetcher {
     // In switching to fetch(), 'recv', 'headers' and 'load' do not make sense
     Util.callbackify(this, ['request', 'fail', 'refresh', 'retract', 'done'])
 
-    Object.keys(HANDLERS).map(key => this.addHandler(HANDLERS[key]))
+    Object.values(options.handlers || HANDLERS).map(value => this.addHandler(value))
   }
 
   static crossSiteProxy (uri) {
@@ -859,7 +861,7 @@ export default class Fetcher {
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referringTerm = undefined
-    } else if (p2 instanceof NamedNode) {
+    } else if (p2.termType === "NamedNode") {
       // referringTerm = p2
       options.referringTerm = p2
     } else {
@@ -1067,7 +1069,7 @@ export default class Fetcher {
    */
   putBack (uri, options = {}) {
     uri = uri.uri || uri // Accept object or string
-    let doc = new NamedNode(uri).doc() // strip off #
+    let doc = NamedNode.doc(this.rdfFactory.namedNode(uri)) // strip off #
     options.contentType = options.contentType || 'text/turtle'
     options.data = serialize(doc, this.store, doc.uri, options.contentType)
     return this.webOperation('PUT', uri, options)

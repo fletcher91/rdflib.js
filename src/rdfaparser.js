@@ -11,11 +11,8 @@
 
 // options.base = base URI    not really an option, shopuld always be set.
 //
+import rdfFactory from '@ontologies/core'
 
-import BlankNode from './blank-node'
-import Literal from './literal'
-import rdf from './data-factory'
-import NamedNode from './named-node'
 import * as Uri from './uri'
 import * as Util from './util'
 
@@ -40,6 +37,7 @@ export default class RDFaProcessor {
   constructor (kb, options) {
     this.options = options || {}
     this.kb = kb
+    this.rdfFactory = kb.rdfFactory || rdfFactory
     this.target = options.target || {
       graph: {
         subjects: {},
@@ -67,13 +65,13 @@ export default class RDFaProcessor {
   addTriple (origin, subject, predicate, object) {
     var su, ob, pr, or
     if (typeof subject === 'undefined') {
-      su = rdf.namedNode(this.options.base)
+      su = this.rdfFactory.namedNode(this.options.base)
     } else {
       su = this.toRDFNodeObject(subject)
     }
     pr = this.toRDFNodeObject(predicate)
     ob = this.toRDFNodeObject(object)
-    or = rdf.namedNode(this.options.base)
+    or = this.rdfFactory.namedNode(this.options.base)
     // console.log('Adding { ' + su + ' ' + pr + ' ' + ob + ' ' + or + ' }')
     this.kb.add(su, pr, ob, or)
   }
@@ -875,32 +873,32 @@ export default class RDFaProcessor {
     if (typeof x === 'string') {
       if (x.substring(0, 2) === '_:') {
         if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
-          this.blankNodes[x.substring(2)] = new BlankNode(x.substring(2))
+          this.blankNodes[x.substring(2)] = this.rdfFactory.blankNode(x.substring(2))
         }
         return this.blankNodes[x.substring(2)]
       }
-      return rdf.namedNode(x)
+      return this.rdfFactory.namedNode(x)
     }
     switch (x.type) {
       case RDFaProcessor.objectURI:
         if (x.value.substring(0, 2) === '_:') {
           if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
-            this.blankNodes[x.value.substring(2)] = new BlankNode(x.value.substring(2))
+            this.blankNodes[x.value.substring(2)] = this.rdfFactory.blankNode(x.value.substring(2))
           }
           return this.blankNodes[x.value.substring(2)]
         }
-        return rdf.namedNode(x.value)
+        return this.rdfFactory.namedNode(x.value)
       case RDFaProcessor.PlainLiteralURI:
-        return new Literal(x.value, x.language || '')
+        return this.rdfFactory.literal(x.value, x.language || '')
       case RDFaProcessor.XMLLiteralURI:
       case RDFaProcessor.HTMLLiteralURI:
         var string = ''
         Object.keys(x.value).forEach(function (i) {
           string += Util.domToString(x.value[i], this.htmlOptions)
         })
-        return new Literal(string, '', new NamedNode(x.type))
+        return this.rdfFactory.literal(string, this.rdfFactory.namedNode(x.type))
       default:
-        return new Literal(x.value, '', new NamedNode(x.type))
+        return this.rdfFactory.literal(x.value, this.rdfFactory.namedNode(x.type))
     }
   }
 
