@@ -96,11 +96,13 @@
     ".babelrc",
     "src",
     "lib",
-    "dist"
+    "dist",
+    "index.d.ts"
   ],
   "main": "lib/index.js",
   "module": "src/index.js",
   "sideEffects": false,
+  "types": "index.d.ts",
   "keywords": [
     "linkeddata",
     "linked data",
